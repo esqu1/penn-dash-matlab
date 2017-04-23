@@ -30,17 +30,8 @@ function PennDash
         names = cell(1,1);
         % Need to update this with necessary buttons
         for i=1:length(venues)
-            v = venues{i};
-            names{i} = v.name;
-            try
-                open = v.dateHours(1).meal.open;
-                closed = v.dateHours(1).meal.close;
-            catch
-                continue
-            end
-            hours = sprintf([hours '\n%s'],[v.name ': ' timeConv(open) ' - ' timeConv(closed)]);
+            names{i} = venues{i}.name;
         end
-        names
         h = uicontrol('Style','text','Units','normalized',...
                       'Position',[.5 .5 .3 .3],'String',hours);
         hall = uicontrol('Style','listbox','Units','normalized',...
@@ -48,12 +39,13 @@ function PennDash
                          'UserData',struct('hours',h,'names',names));
                      
         function updateHours(source,eventData)
+            times = '';
             try
                 hour = venues{source.Value}.dateHours(1).meal;
             catch
+                h.String = 'Not available at this time.';
                 return
             end
-            times = '';
             for i=1:length(hour)
                 time = hour(i)
                 try
