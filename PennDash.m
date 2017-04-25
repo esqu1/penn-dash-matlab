@@ -1,6 +1,7 @@
 function PennDash
     RETURNTEXT = 'Return to Menu';
-    SUBTITLE = sprintf('It is now %s, and it is currently %s.',datestr(now,'mmmm dd, yyyy HH:MM:SS PM'),'68°C');
+    weather = webread('http://api.pennlabs.org/weather');
+    SUBTITLE = sprintf('It is now %s, and it is currently %s.',datestr(now,'mmmm dd, yyyy HH:MM:SS PM'),[num2str(weather.weather_data.main.temp) '°F']);
     f = figure('Visible','off','Position', [500 500 600 600]);
     title = uicontrol('Style','text','Units','normalized',...
                       'Position',[.1 .7 .8 .25],'String','Welcome to Penn Dash!',...
