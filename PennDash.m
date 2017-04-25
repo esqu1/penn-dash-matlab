@@ -21,12 +21,14 @@ function PennDash
     end
 
     function Dining(source,eventData)
-        dining.Enable = 'off';
         for i=1:length(central)
+            central{i}.Enable = 'off';
             central{i}.Visible = 'off';
         end
         d = webread('http://api.pennlabs.org/dining/venues');
-        dining.Enable = 'on';
+        for i=1:length(central)
+            central{i}.Enable = 'on';
+        end
         venues = d.document.venue;
         hours = '';
         names = cell(1,1);
@@ -74,12 +76,14 @@ function PennDash
     end
 
     function Laundry(source,eventData)
-        laundry.Enable = 'off';
         for i=1:length(central)
+            central{i}.Enable = 'off';
             central{i}.Visible = 'off';
         end
         d = webread('http://api.pennlabs.org/laundry/halls');
-        laundry.Enable = 'on';
+        for i=1:length(central)
+            central{i}.Enable = 'on';
+        end
         halls = d.halls;
         building = uicontrol('Style','listbox','Units','normalized',...
                     'Position',[.1 .1 .3 .3],'String',{halls.name},...
@@ -90,8 +94,9 @@ function PennDash
         l = uicontrol('Style','text','Units','normalized',...
                     'Position',[.5 .1 .4 .3],'String','asdf','FontSize',14);
         graph = uipanel('Title','Main','Position',[.05 .5 .9 .3]);
+        a = axes(graph);
         function backtoMenu(source,eventData)
-            lVisible = 'off';
+            l.Visible = 'off';
             building.Visible = 'off';
             returnToMenu.Visible = 'off';
             graph.Visible = 'off';
@@ -102,21 +107,45 @@ function PennDash
         
         function updateLaundry(source,eventData)
             halls = source.UserData;
+            string = '';
             for i=1:length(halls)
                 h = halls(i);
                 if strcmp(h.name,halls(source.Value).name)
-                    l.String = sprintf([string '\n%s\nAvailable Washers: %d/%d\nAvailable Dryers: %d/%d'],...
+                    string = sprintf([string '\n%s\nAvailable Washers: %d/%d\nAvailable Dryers: %d/%d'],...
                         h.name, ...
                         h.washers_available,... 
                         h.washers_in_use + h.washers_available,...
                         h.dryers_available, ...
                         h.dryers_in_use + h.dryers_available);
-                    usages = webread(['http://api.pennlabs.org/laundry/usage' num2str(source.Value)]);
+                    usages = webread(['http://api.pennlabs.org/laundry/usage/' num2str(source.Value)]);
+                    days = fieldnames(usages.days);
+                    for i=1:length(days)
+                        hours = [];
+                        for j=1:length(usages.days.(days{i}))
+                            degree = usages.days.(days{i}){j};
+                            if strcmp(degree,'Low') | strcmp(degree,'No Data')
+                                hours(j) = 0;
+                            elseif strcmp(degree, 'Medium')
+                                hours(j) = 1;
+                            elseif strcmp(degree, 'High')
+                                hours(j) = 2;
+                            elseif strcmp(degree, 'Very High')
+                                hours(j) = 3;
+                            end
+                        end
+                        usages.days.(days{i}) = hours;
+                    end
+                    cla;
+                    hold on;
+                    for i=1:length(days)
+                        plot(1:24,usages.days.(days{i}));
+                    end
+                    hold off;
+                    legend(days);
                     break;
                 end
             end
-            p = subplot(1,1,1, 'Parent', graph);
-            plot([1 2], [3 4]);
+            l.String = string;
         end
     end
 
