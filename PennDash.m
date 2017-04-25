@@ -1,9 +1,12 @@
 function PennDash
     RETURNTEXT = 'Return to Menu';
+    SUBTITLE = sprintf('It is now %s, and it is currently %s.',datestr(now,'mmmm dd, yyyy HH:MM:SS PM'),'68°C');
     f = figure('Visible','off','Position', [500 500 600 600]);
     title = uicontrol('Style','text','Units','normalized',...
-                      'Position',[.1 .5 .8 .45],'String','Welcome to Penn Dash!',...
+                      'Position',[.1 .7 .8 .25],'String','Welcome to Penn Dash!',...
                       'FontSize',20);
+    subtitle = uicontrol('Style','text','Units','normalized',...
+                         'Position', [.1 .57 .8 .3],'String',SUBTITLE);
     dining = uicontrol('Style','PushButton','Units','normalized',...
                        'Position',[.1 .7 .2 .1],'String','Dining Halls',...
                        'Callback',@Dining);
@@ -16,7 +19,7 @@ function PennDash
                           'Position', [.7 .7 .2 .1], 'String', 'Buildings',...
                           'Callback',@Buildings);
                    
-    central = {title dining laundry buildings};
+    central = {title subtitle dining laundry buildings};
     movegui(f,'center');
     f.Visible = 'on';
     set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
@@ -96,7 +99,7 @@ function PennDash
                     'Position', [.05 .8 .2 .1], 'String', RETURNTEXT,...
                     'CallBack', @backtoMenu);
         l = uicontrol('Style','text','Units','normalized',...
-                    'Position',[.5 .1 .4 .3],'String','asdf','FontSize',14);
+                    'Position',[.5 .1 .4 .3],'String','','FontSize',14);
         graph = uipanel('Title','Main','Position',[.05 .5 .9 .3]);
         a = axes(graph);
         function backtoMenu(source,~)
