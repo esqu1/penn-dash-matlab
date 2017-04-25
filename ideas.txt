@@ -1,6 +1,0 @@
-pde simulator (control coeffs)
-chemical equilibrium
-music generator
-api scraping???? (it works! instantly gives you json)
-piano/different instruments
-chess 
