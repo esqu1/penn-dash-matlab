@@ -1,6 +1,6 @@
 function PennDash
     RETURNTEXT = 'Return to Menu';
-    f = figure('Visible','off','Position', [500 500 500 500]);
+    f = figure('Visible','off','Position', [500 500 600 600]);
     title = uicontrol('Style','text','Units','normalized',...
                       'Position',[.1 .5 .8 .5],'String','Welcome to Penn Dash!',...
                       'FontSize',20);
@@ -37,8 +37,7 @@ function PennDash
         h = uicontrol('Style','text','Units','normalized',...
                       'Position',[.5 .5 .4 .4],'String',hours);
         hall = uicontrol('Style','listbox','Units','normalized',...
-                         'Position',[.1 .1 .3 .3],'String',names,'Callback',@updateHours,...
-                         'UserData',struct('hours',h,'names',names));
+                         'Position',[.1 .1 .3 .3],'String',names,'Callback',@updateHours);
         returnToMenu = uicontrol('Style','pushButton', 'Units', 'normalized',...
                                  'Position', [.05 .8 .2 .1], 'String', RETURNTEXT,...
                                  'CallBack', @backtoMenu);
@@ -90,12 +89,34 @@ function PennDash
         l = uicontrol('Style','text','Units','normalized',...
                       'Position',[.5 .5 .4 .4],'String','');
         building = uicontrol('Style','listbox','Units','normalized',...
-                 'Position',[.1 .1 .3 .3],'String',listOfBuildings,'Callback',@updateHours,...
-                 'UserData',listOfBuildings);
+                 'Position',[.1 .1 .3 .3],'String',listOfBuildings,'Callback',@updateLaundry,...
+                 'UserData',halls);
+        returnToMenu = uicontrol('Style','pushButton', 'Units', 'normalized',...
+                         'Position', [.05 .8 .2 .1], 'String', RETURNTEXT,...
+                         'CallBack', @backtoMenu);
+        
+        function backtoMenu(source,eventData)
+            l.Visible = 'off';
+            building.Visible = 'off';
+            returnToMenu.Visible = 'off';
+            for i=1:length(central)
+                central{i}.Visible = 'on';
+            end
+        end
         
         function updateLaundry(source,eventData)
-            
-        end    
+            halls = source.UserData;
+            string = '';
+            for i=1:length(halls)
+                h = halls(i);
+                if strcmp(h.building,listOfBuildings{source.Value})
+                    string = sprintf([string '\n%s\nAvailable Washers: %s\nAvailable Dryers: %s'],...
+                        h.name, num2str(h.washers_available), num2str(h.dryers_available));
+                end
+            end
+            h = uicontrol('Style','text','Units','normalized',...
+                      'Position',[.5 .1 .4 .9],'String',string,'FontSize',8);
+        end
     end
 
 
