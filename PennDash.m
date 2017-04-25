@@ -171,12 +171,12 @@ function PennDash
         textResult = uicontrol('Style','text','Units','normalized',...
                                'Position',[.5 .8 .45 .15],'FontSize',18);
         descrip = uicontrol('Style','text','Units','normalized',...
-                               'Position',[.5 .1 .45 .35]);        
+                               'Position',[.5 0 .45 .45]);        
         resultData = {}; namesOfBuildings = {}; im = [];
                          
         function backtoMenu(source,eventData)
             delete(returnToMenu); delete(searchbar); delete(results);
-            delete(textResult); delete(descrip); delete(im);
+            delete(textResult); delete(descrip); im.Visible = 'off';
             for i=1:length(central)
                 central{i}.Visible = 'on';
             end
@@ -200,9 +200,14 @@ function PennDash
             b = resultData.result_data(source.Value);
             textResult.String = b.title;
             axes('Units','normalized','Position',[.5 .5 .45 .3]);
+            im.Visible = 'off';
             im = image(imread(b.campus_item_images(1).image_url));
+            im.Visible = 'on';
             axis off;
-            descrip.String = b.description;
+            if strcmp(b.address,'')
+                b.address = 'N/A';
+            end
+            descrip.String = sprintf('%s\nAddress: %s', b.description, b.address);
         end
     end
 end
