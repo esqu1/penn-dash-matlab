@@ -104,6 +104,7 @@ function PennDash
             l.Visible = 'off';
             building.Visible = 'off';
             returnToMenu.Visible = 'off';
+            clear l building returnToMenu
             graph.Visible = 'off';
             for i=1:length(central)
                 central{i}.Visible = 'on';
@@ -141,7 +142,7 @@ function PennDash
                         usages.days.(days{i}) = hours;
                     end
                     cla;
-                    [~, dayName] = weekday(now,'long');
+                    [V, dayName] = weekday(now,'long');
                     bar(1:24,usages.days.(dayName));
                     ylim([0 4]);
                     xlabel('Hour of Day');
@@ -166,13 +167,31 @@ function PennDash
                     'Position', [.05 .8 .2 .1], 'String', RETURNTEXT,...
                     'CallBack', @backtoMenu);
         searchbar = uicontrol('Style','edit','Units','normalized',...
-                              'Position',[.1 .7 .4 .025],'CallBack',@fetchBuilding);
+                              'Position',[.1 .7 .4 .04],'CallBack',@fetchBuilding);
+        results = uicontrol('Style','listbox','Units','normalized',...
+                             'Position',[.1 .1 .4 .4],'CallBack', @showResult);
+                         
+        function backtoMenu(source,eventData)
+            for i=1:length(central)
+                central{i}.Visible = 'on';
+            end
+        end
         
         function fetchBuilding(source,~)
             resultData = webread(['http://api.pennlabs.org/buildings/search?q=' source.String]);
-            source.String
+            try
+                namesOfBuildings = {resultData.result_data.title};
+                searchbar.BackgroundColor = 'white';
+            catch
+                searchbar.BackgroundColor = 'red';
+                return;
+            end
+            results.String = namesOfBuildings;
         end
-                          
+        
+        function showResult(source,~)
+            
+        end          
     end
 
 
