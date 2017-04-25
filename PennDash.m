@@ -81,24 +81,20 @@ function PennDash
         d = webread('http://api.pennlabs.org/laundry/halls');
         laundry.Enable = 'on';
         halls = d.halls;
-        for i=1:length(halls)
-            n = strsplit(halls(i).name, '-');
-            halls(i).building = n{1};
-        end
-        listOfBuildings = unique({halls.building});        
-        l = uicontrol('Style','text','Units','normalized',...
-                      'Position',[.5 .5 .4 .4],'String','');
         building = uicontrol('Style','listbox','Units','normalized',...
-                 'Position',[.1 .1 .3 .3],'String',listOfBuildings,'Callback',@updateLaundry,...
-                 'UserData',halls);
+                    'Position',[.1 .1 .3 .3],'String',{halls.name},...
+                    'Callback',@updateLaundry,'UserData',halls);
         returnToMenu = uicontrol('Style','pushButton', 'Units', 'normalized',...
-                         'Position', [.05 .8 .2 .1], 'String', RETURNTEXT,...
-                         'CallBack', @backtoMenu);
-        
+                    'Position', [.05 .8 .2 .1], 'String', RETURNTEXT,...
+                    'CallBack', @backtoMenu);
+        l = uicontrol('Style','text','Units','normalized',...
+                    'Position',[.5 .1 .4 .3],'String','asdf','FontSize',14);
+        graph = uipanel('Title','Main','Position',[.05 .5 .9 .3]);
         function backtoMenu(source,eventData)
-            l.Visible = 'off';
+            lVisible = 'off';
             building.Visible = 'off';
             returnToMenu.Visible = 'off';
+            graph.Visible = 'off';
             for i=1:length(central)
                 central{i}.Visible = 'on';
             end
@@ -106,16 +102,21 @@ function PennDash
         
         function updateLaundry(source,eventData)
             halls = source.UserData;
-            string = '';
             for i=1:length(halls)
                 h = halls(i);
-                if strcmp(h.building,listOfBuildings{source.Value})
-                    string = sprintf([string '\n%s\nAvailable Washers: %s\nAvailable Dryers: %s'],...
-                        h.name, num2str(h.washers_available), num2str(h.dryers_available));
+                if strcmp(h.name,halls(source.Value).name)
+                    l.String = sprintf([string '\n%s\nAvailable Washers: %d/%d\nAvailable Dryers: %d/%d'],...
+                        h.name, ...
+                        h.washers_available,... 
+                        h.washers_in_use + h.washers_available,...
+                        h.dryers_available, ...
+                        h.dryers_in_use + h.dryers_available);
+                    usages = webread(['http://api.pennlabs.org/laundry/usage' num2str(source.Value)]);
+                    break;
                 end
             end
-            h = uicontrol('Style','text','Units','normalized',...
-                      'Position',[.5 .1 .4 .9],'String',string,'FontSize',8);
+            p = subplot(1,1,1, 'Parent', graph);
+            plot([1 2], [3 4]);
         end
     end
 
