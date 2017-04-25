@@ -1,0 +1,24 @@
+\documentclass[12pt]{article}
+\usepackage{esqu1}
+\pagestyle{fancy}
+
+\lhead{Brandon Lin}
+\chead{ENGR 105 Spring 2017}
+\rhead{Professor Michael Rizk}
+
+\begin{document}
+	\begin{center}
+		\section*{Final Project Update Assignment}
+	\end{center}
+	My project will be a central Penn dashboard, containing various resources for Penn students to access useful information from the university. The project will, for example, show dining hall hours, available study spaces on campus, and display course information. The project will make use of the Penn Labs Mobile API that acts as a wrapper to the university's API's for obtaining such information. \\\\
+	The basic UI will be as follows: the splash page of the GUI will be a homepage, containing some essential information, such as the date, time, weather, etc. There are also several other buttons on the GUI allowing the user to view information about other parts of Penn, such as dining halls, open laundry machines, and other features that are specified in the Penn API.
+	\begin{itemize}
+		\item The Dining Hall section will display all the dining options on campus, and depending on the day, will display their opening hours. (Potentially, we can also show their menus, but the API for this could possibly be down.)
+		\item The Laundry Machines section will display the status of all the laundry machines on campus in the residence halls.
+		\item The Directory section will allow Penn users to search for people's names through the Penn Directory (of faculty, staff, etc.)
+		\item The Course Information section will display course information about the current semester (and, if applicable, past semesters).
+		\item The Studyspaces section will show any open study spaces on campus, including study rooms in Van Pelt, Biomedical Library, etc. (no Wharton GSR's)
+		\item The Buildings section lets a user search up on any building information on campus.
+	\end{itemize}
+	The main challenge with this project will be to figure out how to present the data in an appropriate fashion. Although the information gathered from the API's is in an organized fashion, the question is one of how to organize this information and create a friendly user interface/experience.
+\end{document}

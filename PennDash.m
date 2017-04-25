@@ -2,7 +2,7 @@ function PennDash
     RETURNTEXT = 'Return to Menu';
     f = figure('Visible','off','Position', [500 500 600 600]);
     title = uicontrol('Style','text','Units','normalized',...
-                      'Position',[.1 .5 .8 .5],'String','Welcome to Penn Dash!',...
+                      'Position',[.1 .5 .8 .45],'String','Welcome to Penn Dash!',...
                       'FontSize',20);
     dining = uicontrol('Style','PushButton','Units','normalized',...
                        'Position',[.1 .7 .2 .1],'String','Dining Halls',...
@@ -19,6 +19,7 @@ function PennDash
     central = {title dining laundry buildings};
     movegui(f,'center');
     f.Visible = 'on';
+    set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
     
     function t = timeConv(time)
         t = datestr(datenum(time,'HH:MM:SS'),16);
@@ -43,16 +44,14 @@ function PennDash
         h = uicontrol('Style','text','Units','normalized',...
                       'Position',[.5 .5 .4 .4],'String',hours);
         hall = uicontrol('Style','listbox','Units','normalized',...
-                         'Position',[.1 .1 .3 .3],'String',names,'Callback',@updateHours);
+                         'Position',[.05 .1 .3 .3],'String',names,'Callback',@updateHours);
         returnToMenu = uicontrol('Style','pushButton', 'Units', 'normalized',...
                                  'Position', [.05 .8 .2 .1], 'String', RETURNTEXT,...
                                  'CallBack', @backtoMenu);
         f.Visible = 'on';
         
         function backtoMenu(source,eventData)
-            h.Visible = 'off';
-            hall.Visible = 'off';
-            returnToMenu.Visible = 'off';
+            delete(h); delete(hall); delete(returnToMenu);
             for i=1:length(central)
                 central{i}.Visible = 'on';
             end
@@ -91,7 +90,7 @@ function PennDash
         end
         halls = d.halls;
         building = uicontrol('Style','listbox','Units','normalized',...
-                    'Position',[.1 .1 .3 .3],'String',{halls.name},...
+                    'Position',[.05 .1 .3 .3],'String',{halls.name},...
                     'Callback',@updateLaundry,'UserData',halls);
         returnToMenu = uicontrol('Style','pushButton', 'Units', 'normalized',...
                     'Position', [.05 .8 .2 .1], 'String', RETURNTEXT,...
@@ -101,10 +100,7 @@ function PennDash
         graph = uipanel('Title','Main','Position',[.05 .5 .9 .3]);
         a = axes(graph);
         function backtoMenu(source,~)
-            l.Visible = 'off';
-            building.Visible = 'off';
-            returnToMenu.Visible = 'off';
-            clear l building returnToMenu
+            delete(l); delete(building); delete(returnToMenu);
             graph.Visible = 'off';
             for i=1:length(central)
                 central{i}.Visible = 'on';
@@ -168,32 +164,45 @@ function PennDash
                     'Position', [.05 .8 .2 .1], 'String', RETURNTEXT,...
                     'CallBack', @backtoMenu);
         searchbar = uicontrol('Style','edit','Units','normalized',...
-                              'Position',[.1 .7 .4 .04],'CallBack',@fetchBuilding);
+                              'Position',[.05 .7 .4 .04],'CallBack',@fetchBuilding);
         results = uicontrol('Style','listbox','Units','normalized',...
-                             'Position',[.1 .1 .4 .4],'CallBack', @showResult);
+                             'Position',[.05 .1 .4 .4],'CallBack', @showResult);
+        
+        textResult = uicontrol('Style','text','Units','normalized',...
+                               'Position',[.5 .8 .45 .15],'FontSize',18);
+        descrip = uicontrol('Style','text','Units','normalized',...
+                               'Position',[.5 .1 .45 .35]);        
+        resultData = {}; namesOfBuildings = {}; im = [];
                          
         function backtoMenu(source,eventData)
+            delete(returnToMenu); delete(searchbar); delete(results);
+            delete(textResult); delete(descrip); delete(im);
             for i=1:length(central)
                 central{i}.Visible = 'on';
             end
         end
         
         function fetchBuilding(source,~)
+            results.Value = 1;
             resultData = webread(['http://api.pennlabs.org/buildings/search?q=' source.String]);
             try
                 namesOfBuildings = {resultData.result_data.title};
                 searchbar.BackgroundColor = 'white';
             catch
                 searchbar.BackgroundColor = 'red';
+                results.String = [];
                 return;
             end
             results.String = namesOfBuildings;
         end
         
         function showResult(source,~)
-            
-        end          
+            b = resultData.result_data(source.Value);
+            textResult.String = b.title;
+            axes('Units','normalized','Position',[.5 .5 .45 .3]);
+            im = image(imread(b.campus_item_images(1).image_url));
+            axis off;
+            descrip.String = b.description;
+        end
     end
-
-
 end
