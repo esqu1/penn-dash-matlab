@@ -11,8 +11,12 @@ function PennDash
     laundry = uicontrol('Style','PushButton','Units','normalized',...
                         'Position',[.4 .7 .2 .1], 'String','Laundry',...
                         'Callback',@Laundry);
+                    
+    buildings = uicontrol('Style', 'PushButton','Units', 'normalized',...
+                          'Position', [.7 .7 .2 .1], 'String', 'Buildings',...
+                          'Callback',@Buildings);
                    
-    central = {title dining laundry};
+    central = {title dining laundry buildings};
     movegui(f,'center');
     f.Visible = 'on';
     
@@ -44,6 +48,7 @@ function PennDash
                                  'Position', [.05 .8 .2 .1], 'String', RETURNTEXT,...
                                  'CallBack', @backtoMenu);
         f.Visible = 'on';
+        
         function backtoMenu(source,eventData)
             h.Visible = 'off';
             hall.Visible = 'off';
@@ -95,7 +100,7 @@ function PennDash
                     'Position',[.5 .1 .4 .3],'String','asdf','FontSize',14);
         graph = uipanel('Title','Main','Position',[.05 .5 .9 .3]);
         a = axes(graph);
-        function backtoMenu(source,eventData)
+        function backtoMenu(source,~)
             l.Visible = 'off';
             building.Visible = 'off';
             returnToMenu.Visible = 'off';
@@ -105,7 +110,7 @@ function PennDash
             end
         end
         
-        function updateLaundry(source,eventData)
+        function updateLaundry(source,~)
             halls = source.UserData;
             string = '';
             for i=1:length(halls)
@@ -120,7 +125,7 @@ function PennDash
                     usages = webread(['http://api.pennlabs.org/laundry/usage/' num2str(source.Value)]);
                     days = fieldnames(usages.days);
                     for i=1:length(days)
-                        hours = [];
+                        hours = zeros(24);
                         for j=1:length(usages.days.(days{i}))
                             degree = usages.days.(days{i}){j};
                             if strcmp(degree,'Low') | strcmp(degree,'No Data')
@@ -136,17 +141,38 @@ function PennDash
                         usages.days.(days{i}) = hours;
                     end
                     cla;
-                    hold on;
-                    for i=1:length(days)
-                        plot(1:24,usages.days.(days{i}));
-                    end
-                    hold off;
-                    legend(days);
+                    [~, dayName] = weekday(now,'long');
+                    bar(1:24,usages.days.(dayName));
+                    ylim([0 4]);
+                    xlabel('Hour of Day');
+                    ylabel('Usage Intensity');
+                    legend(dayName);
                     break;
                 end
             end
             l.String = string;
         end
+    end
+
+    function Buildings(source, ~)
+        for i=1:length(central)
+            central{i}.Enable = 'off';
+            central{i}.Visible = 'off';
+        end
+        for i=1:length(central)
+            central{i}.Enable = 'on';
+        end
+        returnToMenu = uicontrol('Style','pushButton', 'Units', 'normalized',...
+                    'Position', [.05 .8 .2 .1], 'String', RETURNTEXT,...
+                    'CallBack', @backtoMenu);
+        searchbar = uicontrol('Style','edit','Units','normalized',...
+                              'Position',[.1 .7 .4 .025],'CallBack',@fetchBuilding);
+        
+        function fetchBuilding(source,~)
+            resultData = webread(['http://api.pennlabs.org/buildings/search?q=' source.String]);
+            source.String
+        end
+                          
     end
 
 
