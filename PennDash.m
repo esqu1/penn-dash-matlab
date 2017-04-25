@@ -143,8 +143,9 @@ function PennDash
                     end
                     cla;
                     [V, dayName] = weekday(now,'long');
-                    bar(1:24,usages.days.(dayName));
+                    bar(1:24,usages.days.(dayName),10);
                     ylim([0 4]);
+                    set(gca,'xtick', 0:24);
                     xlabel('Hour of Day');
                     ylabel('Usage Intensity');
                     legend(dayName);
