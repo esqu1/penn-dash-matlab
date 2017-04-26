@@ -1,8 +1,9 @@
 function PennDash
     RETURNTEXT = 'Return to Menu';
+    RETURNPOSITION = [.75 .87 .2 .1];
     weather = webread('http://api.pennlabs.org/weather');
     SUBTITLE = sprintf('It is now %s, and it is currently %s.',datestr(now,'mmmm dd, yyyy HH:MM:SS PM'),[num2str(weather.weather_data.main.temp) '°F']);
-    f = figure('Visible','off','Position', [500 500 600 600]);
+    f = figure('Visible','off','Position', [500 500 800 700]);
     title = uicontrol('Style','text','Units','normalized',...
                       'Position',[.1 .7 .8 .25],'String','Welcome to Penn Dash!',...
                       'FontSize',20);
@@ -19,11 +20,14 @@ function PennDash
     buildings = uicontrol('Style', 'PushButton','Units', 'normalized',...
                           'Position', [.7 .7 .2 .1], 'String', 'Buildings',...
                           'Callback',@Buildings);
+                      
+    %studyspaces = uicontrol('Style','PushButton','Units','normalized',...
+                            
                    
     central = {title subtitle dining laundry buildings};
     movegui(f,'center');
     f.Visible = 'on';
-    set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
+    set(gcf, 'Resize','off');
     
     function t = timeConv(time)
         t = datestr(datenum(time,'HH:MM:SS'),16);
@@ -46,23 +50,35 @@ function PennDash
             names{i} = venues{i}.name;
         end
         h = uicontrol('Style','text','Units','normalized',...
-                      'Position',[.5 .5 .4 .4],'String',hours);
+                      'Position',[.5 .3 .4 .4],'String',hours);
         hall = uicontrol('Style','listbox','Units','normalized',...
                          'Position',[.05 .1 .3 .3],'String',names,'Callback',@updateHours);
         returnToMenu = uicontrol('Style','pushButton', 'Units', 'normalized',...
-                                 'Position', [.05 .8 .2 .1], 'String', RETURNTEXT,...
+                                 'Position', RETURNPOSITION, 'String', RETURNTEXT,...
                                  'CallBack', @backtoMenu);
-        f.Visible = 'on';
-        
+        text = uicontrol('Style','text','Units','normalized',....
+                         'Position',[.05 .4 .3 .1],'String',...
+                         'Select your dining hall here:','FontSize',16);
+        text2 = uicontrol('Style','text','Units','normalized',....
+                         'Position',[.05 .5 .3 .2],'String',...
+                         'This widget allows you to view where and where to get food.','FontSize',14);
+        top = uicontrol('Style','text','Units','normalized',...
+                      'Position',[.25 .7 .5 .25],'String','Dining Hall Open Hours',...
+                      'FontSize',20);
+        hallName = uicontrol('Style','text','Units','normalized',...
+                             'Position',[.45 .7 .5 .05],'String','','FontSize',16);
         function backtoMenu(source,eventData)
             delete(h); delete(hall); delete(returnToMenu);
+            delete(text); delete(text2); delete(top);
+            delete(hallName);
             for i=1:length(central)
                 central{i}.Visible = 'on';
             end
         end
                      
         function updateHours(source,eventData)
-            times = '';
+            times = '';            
+            hallName.String = [venues{source.Value}.name ':'];
             try
                 hour = venues{source.Value}.dateHours(1).meal;
             catch
@@ -80,6 +96,7 @@ function PennDash
                 times = sprintf([times '\n%s'],[time.type ': ' timeConv(open) ' - ' timeConv(closed)]);
             end
             h.String = times;
+            hallName.String = [venues{source.Value}.name ':'];
         end
     end
 
@@ -97,15 +114,24 @@ function PennDash
                     'Position',[.05 .1 .3 .3],'String',{halls.name},...
                     'Callback',@updateLaundry,'UserData',halls);
         returnToMenu = uicontrol('Style','pushButton', 'Units', 'normalized',...
-                    'Position', [.05 .8 .2 .1], 'String', RETURNTEXT,...
+                    'Position', RETURNPOSITION, 'String', RETURNTEXT,...
                     'CallBack', @backtoMenu);
         l = uicontrol('Style','text','Units','normalized',...
                     'Position',[.5 .1 .4 .3],'String','','FontSize',14);
+        top = uicontrol('Style','text','Units','normalized',...
+                      'Position',[.25 .7 .5 .25],'String','Laundry Machines',...
+                      'FontSize',20);
         graph = uipanel('Title','Main','Position',[.05 .5 .9 .3]);
+        text = uicontrol('Style','text','Units','normalized',....
+                         'Position',[.05 .4 .3 .08],'String',...
+                         'Select your laundry hall here:','FontSize',16);
+        text2 = uicontrol('Style','text','Units','normalized',....
+                         'Position',[.05 .8 .9 .05],'String',...
+                         'This widget tells you what laundry machines are open, and their usages.','FontSize',14);
         a = axes(graph);
         function backtoMenu(source,~)
-            delete(l); delete(building); delete(returnToMenu);
-            graph.Visible = 'off';
+            delete(l); delete(building); delete(returnToMenu); delete(top);
+            graph.Visible = 'off'; delete(text); delete(text2);
             for i=1:length(central)
                 central{i}.Visible = 'on';
             end
@@ -143,7 +169,7 @@ function PennDash
                     end
                     cla;
                     [V, dayName] = weekday(now,'long');
-                    bar(1:24,usages.days.(dayName),10);
+                    bar(1:24,usages.days.(dayName),25);
                     ylim([0 4]);
                     set(gca,'xtick', 0:24);
                     xlabel('Hour of Day');
@@ -164,28 +190,43 @@ function PennDash
         for i=1:length(central)
             central{i}.Enable = 'on';
         end
+        top = uicontrol('Style','text','Units','normalized',...
+              'Position',[.25 .8 .5 .15],'String','Building Search',...
+              'FontSize',20);
         returnToMenu = uicontrol('Style','pushButton', 'Units', 'normalized',...
-                    'Position', [.05 .8 .2 .1], 'String', RETURNTEXT,...
-                    'CallBack', @backtoMenu);
+                    'Position', RETURNPOSITION, 'String', RETURNTEXT,...
+                    'CallBack', @backtoMenu);        
+        text2 = uicontrol('Style','text','Units','normalized',....
+                         'Position',[.05 .5 .3 .08],'String',...
+                         'Enter a search term:','FontSize',16);
+        text3 = uicontrol('Style','text','Units','normalized',....
+                         'Position',[.05 .6 .3 .2],'String',...
+                         'This widget gives information on all of the buildings at Penn.','FontSize',14);
+
         searchbar = uicontrol('Style','edit','Units','normalized',...
-                              'Position',[.05 .7 .4 .04],'CallBack',@fetchBuilding);
+                              'Position',[.05 .5 .3 .04],'CallBack',@fetchBuilding);
         results = uicontrol('Style','listbox','Units','normalized',...
-                             'Position',[.05 .1 .4 .4],'CallBack', @showResult);
+                             'Position',[.05 .1 .3 .3],'CallBack', @showResult);
         
         textResult = uicontrol('Style','text','Units','normalized',...
-                               'Position',[.5 .8 .45 .15],'FontSize',18);
+                               'Position',[.35 .77 .65 .08],'FontSize',16);
         descrip = uicontrol('Style','text','Units','normalized',...
-                               'Position',[.5 0 .45 .45]);        
+                               'Position',[.39 0 .57 .45],'FontSize',7);        
         resultData = {}; namesOfBuildings = {}; im = [];
+
+        text = uicontrol('Style','text','Units','normalized',....
+                         'Position',[.05 .4 .3 .08],'String',...
+                         'and select a building:','FontSize',16);
                          
         function backtoMenu(source,eventData)
             delete(returnToMenu); delete(searchbar); delete(results);
             delete(textResult); delete(descrip); im.Visible = 'off';
+            delete(text); delete(text2); delete(text3); delete(top);
             for i=1:length(central)
                 central{i}.Visible = 'on';
             end
         end
-        
+
         function fetchBuilding(source,~)
             results.Value = 1;
             resultData = webread(['http://api.pennlabs.org/buildings/search?q=' source.String]);
@@ -203,7 +244,7 @@ function PennDash
         function showResult(source,~)
             b = resultData.result_data(source.Value);
             textResult.String = b.title;
-            axes('Units','normalized','Position',[.5 .5 .45 .3]);
+            axes('Units','normalized','Position',[.45 .47 .45 .3]);
             im.Visible = 'off';
             im = image(imread(b.campus_item_images(1).image_url));
             im.Visible = 'on';
