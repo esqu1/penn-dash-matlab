@@ -1,7 +1,13 @@
 function PennDash
     RETURNTEXT = 'Return to Menu';
     RETURNPOSITION = [.75 .87 .2 .1];
+    options = weboptions;
+    options.Timeout = 15;
+    
     weather = webread('http://api.pennlabs.org/weather');
+    d = webread('http://api.pennlabs.org/dining/venues');
+    d2 = webread('http://api.pennlabs.org/laundry/halls');
+    spaces = webread('http://api.pennlabs.org/studyspaces/');
     SUBTITLE = sprintf('It is now %s, and it is currently %s.',datestr(now,'mmmm dd, yyyy HH:MM:SS PM'),[num2str(weather.weather_data.main.temp) '°F']);
     f = figure('Visible','off','Position', [500 500 800 700]);
     title = uicontrol('Style','text','Units','normalized',...
@@ -21,10 +27,12 @@ function PennDash
                           'Position', [.7 .7 .2 .1], 'String', 'Buildings',...
                           'Callback',@Buildings);
                       
-    %studyspaces = uicontrol('Style','PushButton','Units','normalized',...
+    studyspaces = uicontrol('Style','PushButton','Units','normalized',...
+                            'Position', [.1 .4 .2 .1], 'String', 'Studyspaces',...
+                            'Callback', @StudySpaces);
                             
                    
-    central = {title subtitle dining laundry buildings};
+    central = {title subtitle dining laundry buildings studyspaces};
     movegui(f,'center');
     f.Visible = 'on';
     set(gcf, 'Resize','off');
@@ -38,7 +46,7 @@ function PennDash
             central{i}.Enable = 'off';
             central{i}.Visible = 'off';
         end
-        d = webread('http://api.pennlabs.org/dining/venues');
+        
         for i=1:length(central)
             central{i}.Enable = 'on';
         end
@@ -105,11 +113,11 @@ function PennDash
             central{i}.Enable = 'off';
             central{i}.Visible = 'off';
         end
-        d = webread('http://api.pennlabs.org/laundry/halls');
+        
         for i=1:length(central)
             central{i}.Enable = 'on';
         end
-        halls = d.halls;
+        halls = d2.halls;
         building = uicontrol('Style','listbox','Units','normalized',...
                     'Position',[.05 .1 .3 .3],'String',{halls.name},...
                     'Callback',@updateLaundry,'UserData',halls);
@@ -253,6 +261,127 @@ function PennDash
                 b.address = 'N/A';
             end
             descrip.String = sprintf('%s\nAddress: %s', b.description, b.address);
+        end
+    end
+
+    function StudySpaces(source,eventData)
+        for i=1:length(central)
+            central{i}.Enable = 'off';
+            central{i}.Visible = 'off';
+        end
+        for i=1:length(central)
+            central{i}.Enable = 'on';
+        end
+        top = uicontrol('Style','text','Units','normalized',...
+              'Position',[.25 .8 .5 .15],'String','Studyspace Search',...
+              'FontSize',20);
+        returnToMenu = uicontrol('Style','pushButton', 'Units', 'normalized',...
+                    'Position', RETURNPOSITION, 'String', RETURNTEXT,...
+                    'CallBack', @backtoMenu);
+        names = {spaces.studyspaces.name};
+        
+        dates = datetime('now') + days(0:7);
+        possibleDates = cell(1,8);
+        
+        for i=1:length(dates)
+           possibleDates{i} = datestr(dates(i),29);
+        end
+        
+        results = uicontrol('Style','listbox','Units','normalized',...
+                             'Position',[.05 .4 .25 .3],'CallBack', @showRooms,...
+                             'String',names, 'UserData',1);
+        dates = uicontrol('Style','listbox','Units','normalized',...
+                          'Position',[.375 .4 .25 .3],'CallBack', @showRooms,...
+                          'String',possibleDates, 'UserData',2);
+        r = uicontrol('Style','listbox','Units','normalized',...
+                          'Position',[.7 .4 .25 .3],'CallBack', @showResult);
+        currIDValue = 1; currDateValue = 1;
+        
+        slots = {};
+                  
+        availabilityButtons = gobjects(1,48);
+        labels = gobjects(1,12);
+        labels(1) = uicontrol('Style','text','Units','normalized',...
+                          'Position',[.073+0.03 .305 .05 .05],'String',...
+                          '12');
+        for j=2:size(labels,2)
+            labels(j) = uicontrol('Style','text','Units','normalized',...
+                          'Position',[.072+0.03+0.06*(j-1) .305 .05 .05],'String',...
+                          num2str(j-1));
+        end
+        
+        AM = uicontrol('Style','text','Units','normalized',...
+                          'Position',[.089 .275 .05 .05],'String',...
+                          'AM');
+                      
+        PM = uicontrol('Style','text','Units','normalized',...
+                          'Position',[.089 .225 .05 .05],'String',...
+                          'PM');
+        for j=1:size(availabilityButtons,2)/2
+            availabilityButtons(j) = uicontrol('Style','PushButton','Units','normalized',...
+                                                 'Position',[.1+j*0.03 .3 0.03 0.03]);
+            
+        end
+        
+        for j=(size(availabilityButtons,2)/2+1):size(availabilityButtons,2)
+            availabilityButtons(j) = uicontrol('Style','PushButton','Units','normalized',...
+                                     'Position',...
+                                     [.1+(j-size(availabilityButtons,2)/2)*0.03 .25 0.03 0.03]);
+        end
+        
+        function hour = time2hour(t)
+            s = strsplit(t,':');
+            latter = s{2};
+            hour = 2*mod(str2num(s{1}),12) + 1;
+            if strcmp(latter((end-1):end),'PM')
+                hour = hour + 24;
+            end
+            if str2num(latter(1:2)) == 30
+                hour = hour + 1;
+            end
+        end
+        
+        function backtoMenu(source,eventData)
+            delete(returnToMenu); delete(results); delete(dates);
+            delete(availabilityButtons); delete(labels); delete(AM); delete(PM);
+            delete(r);
+            for i=1:length(central)
+                central{i}.Visible = 'on';
+            end
+        end
+        
+        function showRooms(source,eventData)
+            if source.UserData == 1
+                currIDValue = source.Value;
+                r.Value = 1;
+            else
+                currDateValue = source.Value;
+                r.Value = 1;
+            end
+            ids = {spaces.studyspaces.id};
+            id = ids{currIDValue};
+            avail = webread(['http://api.pennlabs.org/studyspaces/' possibleDates{currDateValue} '?id=' num2str(id)]);
+            rooms = unique({avail.studyspaces.room_name});
+            slots = avail.studyspaces;
+            r.String = rooms;
+        end
+        
+        function showResult(source,eventData)
+            for i=1:size(availabilityButtons,2)
+                availabilityButtons(i).Value = 0;
+            end
+            for i=1:length(slots)
+                button = time2hour(slots(i).start_time);
+                if strcmp(slots(i).room_name, r.String{source.Value})
+                    availabilityButtons(button).BackgroundColor = 'green';
+                    availabilityButtons(button).Value = 1;
+                end
+            end
+            for i=1:size(availabilityButtons,2)
+                if availabilityButtons(i).Value ~= 1
+                    availabilityButtons(i).BackgroundColor = 'red';
+                end
+            end
         end
     end
 end
